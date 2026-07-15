@@ -106,6 +106,7 @@ export default function QuizGeneratorPage() {
   const [difficulty, setDifficulty] = useState('medium');
   const [numQuestions, setNumQuestions] = useState('10');
   const [selectedTypes, setSelectedTypes] = useState<string[]>(['multiple_choice', 'true_false']);
+  const [additionalInstructions, setAdditionalInstructions] = useState('');
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -155,6 +156,7 @@ export default function QuizGeneratorPage() {
           difficulty,
           numQuestions: parseInt(numQuestions),
           questionTypes: selectedTypes,
+          additionalInstructions,
         }),
       });
 
@@ -384,6 +386,17 @@ export default function QuizGeneratorPage() {
                       </label>
                     ))}
                   </div>
+                </div>
+
+                {/* Additional instructions */}
+                <div>
+                  <Label>Additional Instructions (optional)</Label>
+                  <Textarea
+                    value={additionalInstructions}
+                    onChange={(e) => setAdditionalInstructions(e.target.value)}
+                    placeholder="e.g. Focus on word problems, include diagrams descriptions, avoid questions about history..."
+                    className="mt-2 min-h-[80px]"
+                  />
                 </div>
 
                 <Button

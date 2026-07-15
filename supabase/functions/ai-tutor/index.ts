@@ -26,7 +26,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { messages, action, content, difficulty, numQuestions, questionTypes, subject, topic } = await req.json();
+    const { messages, action, content, difficulty, numQuestions, questionTypes, subject, topic, additionalInstructions } = await req.json();
 
     const openaiKey = Deno.env.get("OPENAI_API_KEY");
     if (!openaiKey) {
@@ -44,7 +44,7 @@ Deno.serve(async (req: Request) => {
         headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
       });
     } else if (action === "generate_quiz") {
-      result = await generateQuiz(subject, topic, difficulty, numQuestions, questionTypes, openaiKey);
+      result = await generateQuiz(subject, topic, difficulty, numQuestions, questionTypes, additionalInstructions, openaiKey);
     } else if (action === "generate_flashcards") {
       result = await generateFlashcards(content, openaiKey);
     } else if (action === "summarize") {
@@ -115,11 +115,11 @@ async function streamChat(messages: any[], apiKey: string) {
   return { body: stream };
 }
 
-async function generateQuiz(subject: string, topic: string, difficulty: string, numQuestions: number, questionTypes: string[], apiKey: string) {
+async function generateQuiz(subject: string, topic: string, difficulty: string, numQuestions: number, questionTypes: string[], additionalInstructions: string, apiKey: string) {
   const prompt = `Generate a quiz about "${topic}" under the subject "${subject}" with ${numQuestions} questions.
 Difficulty: ${difficulty}
 Question types to include: ${questionTypes.join(", ")}
-
+${additionalInstructions ? `\nAdditional instructions from the user:\n${additionalInstructions}\n` : ""}
 Return ONLY a JSON array of question objects. Each object must have:
 - "question_type": one of "multiple_choice", "true_false", "identification", "fill_blank", "essay"
 - "question_text": the question
