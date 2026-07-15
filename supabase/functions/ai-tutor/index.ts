@@ -46,7 +46,7 @@ Deno.serve(async (req: Request) => {
     } else if (action === "generate_quiz") {
       result = await generateQuiz(subject, topic, difficulty, numQuestions, questionTypes, additionalInstructions, openaiKey);
     } else if (action === "generate_flashcards") {
-      result = await generateFlashcards(content, openaiKey);
+      result = await generateFlashcards(subject, topic, additionalInstructions, openaiKey);
     } else if (action === "summarize") {
       result = await summarizeText(content, openaiKey);
     } else if (action === "simplify") {
@@ -164,14 +164,11 @@ Return ONLY valid JSON, no markdown formatting.`;
   }
 }
 
-async function generateFlashcards(content: string, apiKey: string) {
-  const prompt = `Based on the following content, generate flashcards.
+async function generateFlashcards(subject: string, topic: string, additionalInstructions: string, apiKey: string) {
+  const prompt = `Generate flashcards about "${topic}" under the subject "${subject}".
 Each flashcard should have a "front" (question or term) and "back" (answer or definition).
 Generate 10-20 flashcards covering the key concepts.
-
-Content:
-${content}
-
+${additionalInstructions ? `\nAdditional instructions from the user:\n${additionalInstructions}\n` : ""}
 Return ONLY a JSON object with a "flashcards" array containing objects with "front" and "back" fields. No markdown.`;
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {

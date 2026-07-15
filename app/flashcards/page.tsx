@@ -6,12 +6,14 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import {
   Layers, Loader2, Sparkles, Shuffle, Bookmark, BookmarkCheck,
   Star, ChevronLeft, ChevronRight, RotateCcw, Trash2, Plus,
+  FlaskConical, Calculator, BookOpen,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -26,12 +28,77 @@ type Flashcard = {
   review_count: number;
 };
 
+const subjects = [
+  {
+    id: 'science',
+    label: 'Science',
+    icon: FlaskConical,
+    color: 'text-green-500',
+    bgColor: 'bg-green-500/10',
+    borderColor: 'border-green-500/30',
+    topics: [
+      'Biology',
+      'Chemistry',
+      'Physics',
+      'Earth Science',
+      'Environmental Science',
+      'Astronomy',
+      'Anatomy & Physiology',
+      'Microbiology',
+      'Genetics',
+      'Forensic Science',
+    ],
+  },
+  {
+    id: 'math',
+    label: 'Math',
+    icon: Calculator,
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-500/10',
+    borderColor: 'border-blue-500/30',
+    topics: [
+      'Algebra',
+      'Geometry',
+      'Trigonometry',
+      'Calculus',
+      'Statistics',
+      'Probability',
+      'Linear Algebra',
+      'Differential Equations',
+      'Discrete Mathematics',
+      'Number Theory',
+    ],
+  },
+  {
+    id: 'grammar',
+    label: 'Grammar / English',
+    icon: BookOpen,
+    color: 'text-amber-500',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/30',
+    topics: [
+      'Parts of Speech',
+      'Tenses',
+      'Sentence Structure',
+      'Punctuation',
+      'Subject-Verb Agreement',
+      'Active & Passive Voice',
+      'Direct & Indirect Speech',
+      'Vocabulary',
+      'Reading Comprehension',
+      'Essay Writing',
+    ],
+  },
+];
+
 export default function FlashcardsPage() {
   const { user } = useAuth();
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
   const [showGenerator, setShowGenerator] = useState(false);
-  const [genContent, setGenContent] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [additionalInstructions, setAdditionalInstructions] = useState('');
   const [generating, setGenerating] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -51,13 +118,19 @@ export default function FlashcardsPage() {
       });
   }, [user]);
 
+  const handleSubjectSelect = (subjectId: string) => {
+    setSelectedSubject(subjectId === selectedSubject ? null : subjectId);
+    setSelectedTopic(null);
+  };
+
   const generateFlashcards = async () => {
-    if (!genContent.trim()) {
-      toast.error('Please paste some content first');
+    if (!selectedSubject || !selectedTopic) {
+      toast.error('Please select a subject and a topic');
       return;
     }
     setGenerating(true);
     try {
+      const subjectLabel = subjects.find((s) => s.id === selectedSubject)?.label ?? selectedSubject;
       const { data: session } = await supabase.auth.getSession();
       const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/ai-tutor`, {
         method: 'POST',
@@ -66,16 +139,22 @@ export default function FlashcardsPage() {
           'Authorization': `Bearer ${session.session?.access_token}`,
           'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         },
-        body: JSON.stringify({ action: 'generate_flashcards', content: genContent }),
+        body: JSON.stringify({
+          action: 'generate_flashcards',
+          subject: subjectLabel,
+          topic: selectedTopic,
+          additionalInstructions,
+        }),
       });
 
       if (!response.ok) throw new Error('Failed to generate flashcards');
       const data = await response.json();
 
       if (data.flashcards && data.flashcards.length > 0) {
+        const deckTitle = `${subjectLabel}: ${selectedTopic}`;
         const inserts = data.flashcards.map((c: any) => ({
           user_id: user!.id,
-          deck_title: genContent.slice(0, 30) + '...',
+          deck_title: deckTitle,
           front: c.front,
           back: c.back,
         }));
@@ -84,10 +163,12 @@ export default function FlashcardsPage() {
           setCards((prev) => [...inserted, ...prev]);
         }
         toast.success(`Generated ${data.flashcards.length} flashcards!`);
-        setGenContent('');
+        setSelectedSubject(null);
+        setSelectedTopic(null);
+        setAdditionalInstructions('');
         setShowGenerator(false);
       } else {
-        toast.error('Could not generate flashcards from this content');
+        toast.error('Could not generate flashcards for this topic');
       }
     } catch (err: any) {
       toast.error(err.message);
@@ -178,14 +259,77 @@ export default function FlashcardsPage() {
                     Generate Flashcards
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <Textarea
-                    value={genContent}
-                    onChange={(e) => setGenContent(e.target.value)}
-                    placeholder="Paste your notes or study material here..."
-                    className="min-h-[150px]"
-                  />
-                  <Button onClick={generateFlashcards} disabled={generating} className="mt-4 w-full">
+                <CardContent className="space-y-6">
+                  {/* Subject selection */}
+                  <div>
+                    <Label className="mb-3 block">Choose a Subject</Label>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      {subjects.map((subject) => {
+                        const Icon = subject.icon;
+                        const isSelected = selectedSubject === subject.id;
+                        return (
+                          <button
+                            key={subject.id}
+                            onClick={() => handleSubjectSelect(subject.id)}
+                            className={cn(
+                              'flex flex-col items-center gap-3 rounded-xl border-2 p-5 transition-all hover:scale-[1.02]',
+                              isSelected
+                                ? cn(subject.borderColor, subject.bgColor)
+                                : 'border-border hover:border-muted-foreground/30'
+                            )}
+                          >
+                            <Icon className={cn('h-8 w-8', subject.color)} />
+                            <span className="font-medium">{subject.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Topic selection */}
+                  <AnimatePresence>
+                    {selectedSubject && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <Label className="mb-3 block">Select a Topic</Label>
+                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                          {subjects
+                            .find((s) => s.id === selectedSubject)
+                            ?.topics.map((topic) => (
+                              <button
+                                key={topic}
+                                onClick={() => setSelectedTopic(topic === selectedTopic ? null : topic)}
+                                className={cn(
+                                  'rounded-lg border px-4 py-2.5 text-left text-sm transition-all hover:scale-[1.02]',
+                                  selectedTopic === topic
+                                    ? 'border-blue-500 bg-blue-500/10 font-medium'
+                                    : 'border-border hover:border-muted-foreground/30'
+                                )}
+                              >
+                                {topic}
+                              </button>
+                            ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Additional instructions */}
+                  <div>
+                    <Label>Additional Instructions (optional)</Label>
+                    <Textarea
+                      value={additionalInstructions}
+                      onChange={(e) => setAdditionalInstructions(e.target.value)}
+                      placeholder="e.g. Focus on definitions, include examples, make cards harder..."
+                      className="mt-2 min-h-[80px]"
+                    />
+                  </div>
+
+                  <Button onClick={generateFlashcards} disabled={generating || !selectedSubject || !selectedTopic} className="w-full">
                     {generating ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -209,7 +353,7 @@ export default function FlashcardsPage() {
           <div className="py-20 text-center">
             <Layers className="mx-auto mb-4 h-16 w-16 text-muted-foreground/50" />
             <h2 className="mb-2 text-xl font-semibold">No flashcards yet</h2>
-            <p className="mb-6 text-muted-foreground">Generate flashcards from your notes to start studying.</p>
+            <p className="mb-6 text-muted-foreground">Choose a subject and topic to generate flashcards.</p>
             <Button onClick={() => setShowGenerator(true)}>
               <Sparkles className="mr-2 h-4 w-4" />
               Generate Flashcards
