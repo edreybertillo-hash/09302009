@@ -10,12 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import {
-  FileText, Loader2, Upload, CheckCircle2, XCircle, RefreshCw,
+  Loader2, CheckCircle2, XCircle, RefreshCw,
   Sparkles, Award, ChevronRight, Lightbulb,
+  FlaskConical, Calculator, BookOpen, ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -36,9 +36,73 @@ const questionTypeOptions = [
   { value: 'essay', label: 'Essay' },
 ];
 
+const subjects = [
+  {
+    id: 'science',
+    label: 'Science',
+    icon: FlaskConical,
+    color: 'text-green-500',
+    bgColor: 'bg-green-500/10',
+    borderColor: 'border-green-500/30',
+    topics: [
+      'Biology',
+      'Chemistry',
+      'Physics',
+      'Earth Science',
+      'Environmental Science',
+      'Astronomy',
+      'Anatomy & Physiology',
+      'Microbiology',
+      'Genetics',
+      'Forensic Science',
+    ],
+  },
+  {
+    id: 'math',
+    label: 'Math',
+    icon: Calculator,
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-500/10',
+    borderColor: 'border-blue-500/30',
+    topics: [
+      'Algebra',
+      'Geometry',
+      'Trigonometry',
+      'Calculus',
+      'Statistics',
+      'Probability',
+      'Linear Algebra',
+      'Differential Equations',
+      'Discrete Mathematics',
+      'Number Theory',
+    ],
+  },
+  {
+    id: 'grammar',
+    label: 'Grammar / English',
+    icon: BookOpen,
+    color: 'text-amber-500',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/30',
+    topics: [
+      'Parts of Speech',
+      'Tenses',
+      'Sentence Structure',
+      'Punctuation',
+      'Subject-Verb Agreement',
+      'Active & Passive Voice',
+      'Direct & Indirect Speech',
+      'Vocabulary',
+      'Reading Comprehension',
+      'Essay Writing',
+    ],
+  },
+];
+
 export default function QuizGeneratorPage() {
   const { user } = useAuth();
-  const [content, setContent] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [difficulty, setDifficulty] = useState('medium');
   const [numQuestions, setNumQuestions] = useState('10');
   const [selectedTypes, setSelectedTypes] = useState<string[]>(['multiple_choice', 'true_false']);
@@ -55,9 +119,14 @@ export default function QuizGeneratorPage() {
     );
   };
 
+  const handleSubjectSelect = (subjectId: string) => {
+    setSelectedSubject(subjectId === selectedSubject ? null : subjectId);
+    setSelectedTopic(null);
+  };
+
   const generateQuiz = async () => {
-    if (!content.trim()) {
-      toast.error('Please paste some notes or content first');
+    if (!selectedSubject || !selectedTopic) {
+      toast.error('Please select a subject and a topic');
       return;
     }
     if (selectedTypes.length === 0) {
@@ -67,6 +136,8 @@ export default function QuizGeneratorPage() {
     setLoading(true);
     setSubmitted(false);
     setAnswers({});
+
+    const subjectLabel = subjects.find((s) => s.id === selectedSubject)?.label ?? selectedSubject;
 
     try {
       const { data: session } = await supabase.auth.getSession();
@@ -79,7 +150,8 @@ export default function QuizGeneratorPage() {
         },
         body: JSON.stringify({
           action: 'generate_quiz',
-          content,
+          subject: subjectLabel,
+          topic: selectedTopic,
           difficulty,
           numQuestions: parseInt(numQuestions),
           questionTypes: selectedTypes,
@@ -93,7 +165,7 @@ export default function QuizGeneratorPage() {
 
       const data = await response.json();
       if (!data.questions || data.questions.length === 0) {
-        throw new Error('AI could not generate questions from this content. Try adding more detail.');
+        throw new Error('AI could not generate questions for this topic. Try a different topic.');
       }
 
       setQuestions(data.questions);
@@ -101,7 +173,7 @@ export default function QuizGeneratorPage() {
       // Save quiz to database
       const { data: quiz } = await supabase.from('quizzes').insert({
         user_id: user!.id,
-        title: content.slice(0, 50) + '...',
+        title: `${subjectLabel}: ${selectedTopic}`,
         difficulty,
         question_count: data.questions.length,
         status: 'in_progress',
@@ -200,7 +272,7 @@ export default function QuizGeneratorPage() {
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-2xl font-bold md:text-3xl">AI Quiz Generator</h1>
-          <p className="mt-1 text-muted-foreground">Paste your notes and let AI create a quiz instantly</p>
+          <p className="mt-1 text-muted-foreground">Choose a subject and topic, and let AI create a quiz instantly</p>
         </motion.div>
 
         {questions.length === 0 ? (
@@ -208,22 +280,67 @@ export default function QuizGeneratorPage() {
             <Card className="glass-card mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-blue-500" />
-                  Study Material
+                  <Sparkles className="h-5 w-5 text-blue-500" />
+                  Choose a Subject
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="content">Paste your notes, textbook content, or any study material</Label>
-                  <Textarea
-                    id="content"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="Paste your notes here..."
-                    className="min-h-[200px] mt-2"
-                  />
+              <CardContent className="space-y-6">
+                {/* Subject selection */}
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {subjects.map((subject) => {
+                    const Icon = subject.icon;
+                    const isSelected = selectedSubject === subject.id;
+                    return (
+                      <button
+                        key={subject.id}
+                        onClick={() => handleSubjectSelect(subject.id)}
+                        className={cn(
+                          'flex flex-col items-center gap-3 rounded-xl border-2 p-5 transition-all hover:scale-[1.02]',
+                          isSelected
+                            ? cn(subject.borderColor, subject.bgColor)
+                            : 'border-border hover:border-muted-foreground/30'
+                        )}
+                      >
+                        <Icon className={cn('h-8 w-8', subject.color)} />
+                        <span className="font-medium">{subject.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
+                {/* Topic selection - animated reveal */}
+                <AnimatePresence>
+                  {selectedSubject && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <Label className="mb-3 block">Select a Topic</Label>
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {subjects
+                          .find((s) => s.id === selectedSubject)
+                          ?.topics.map((topic) => (
+                            <button
+                              key={topic}
+                              onClick={() => setSelectedTopic(topic === selectedTopic ? null : topic)}
+                              className={cn(
+                                'rounded-lg border px-4 py-2.5 text-left text-sm transition-all hover:scale-[1.02]',
+                                selectedTopic === topic
+                                  ? 'border-blue-500 bg-blue-500/10 font-medium'
+                                  : 'border-border hover:border-muted-foreground/30'
+                              )}
+                            >
+                              {topic}
+                            </button>
+                          ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Difficulty & question count */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <Label>Difficulty</Label>
@@ -253,6 +370,7 @@ export default function QuizGeneratorPage() {
                   </div>
                 </div>
 
+                {/* Question types */}
                 <div>
                   <Label>Question Types</Label>
                   <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -270,7 +388,7 @@ export default function QuizGeneratorPage() {
 
                 <Button
                   onClick={generateQuiz}
-                  disabled={loading || !content.trim()}
+                  disabled={loading || !selectedSubject || !selectedTopic}
                   className="w-full"
                   size="lg"
                 >
