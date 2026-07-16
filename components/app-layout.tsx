@@ -65,7 +65,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
               <Brain className="h-4 w-4" />
             </div>
-            <span className="text-lg font-bold">ReviewAI</span>
           </Link>
         </div>
 
@@ -138,7 +137,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
             <Brain className="h-4 w-4" />
           </div>
-          <span className="text-lg font-bold">ReviewAI</span>
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -171,7 +169,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
                     <Brain className="h-4 w-4" />
                   </div>
-                  <span className="text-lg font-bold">ReviewAI</span>
                 </Link>
                 <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
                   <X className="h-5 w-5" />
