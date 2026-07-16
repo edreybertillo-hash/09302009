@@ -172,30 +172,52 @@ export default function QuizGeneratorPage() {
 
       setQuestions(data.questions);
 
-      // Save quiz to database
-      const { data: quiz } = await supabase.from('quizzes').insert({
-        user_id: user!.id,
-        title: `${subjectLabel}: ${selectedTopic}`,
-        difficulty,
-        question_count: data.questions.length,
-        status: 'in_progress',
-      }).select('id').single();
+    // Show the quiz immediately
+setQuestions(data.questions);
 
-      if (quiz) {
-        setQuizId(quiz.id);
-        for (const q of data.questions) {
-          await supabase.from('questions').insert({
-            quiz_id: quiz.id,
-            question_type: q.question_type,
-            question_text: q.question_text,
-            options: q.options,
-            correct_answer: q.correct_answer,
-            explanation: q.explanation,
-          });
-        }
-      }
+// Save quiz in the background
+try {
+  const { data: quiz, error: quizError } = await supabase
+    .from('quizzes')
+    .insert({
+      user_id: user!.id,
+      title: `${subjectLabel}: ${selectedTopic}`,
+      difficulty,
+      question_count: data.questions.length,
+      status: 'in_progress',
+    })
+    .select('id')
+    .single();
 
-      toast.success(`Generated ${data.questions.length} questions!`);
+  if (quizError) {
+    console.error("Quiz insert error:", quizError);
+  }
+
+  if (quiz) {
+    setQuizId(quiz.id);
+
+    const rows = data.questions.map((q: any) => ({
+      quiz_id: quiz.id,
+      question_type: q.question_type,
+      question_text: q.question_text,
+      options: q.options,
+      correct_answer: q.correct_answer,
+      explanation: q.explanation,
+    }));
+
+    const { error: questionError } = await supabase
+      .from("questions")
+      .insert(rows);
+
+    if (questionError) {
+      console.error("Question insert error:", questionError);
+    }
+  }
+} catch (dbError) {
+  console.error("Database error:", dbError);
+}
+
+toast.success(`Generated ${data.questions.length} questions!`);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
