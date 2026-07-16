@@ -198,9 +198,9 @@ if (!Array.isArray(questions) || questions.length === 0) {
 }
 
 return { questions };
-  } catch {
-    return { questions: [], raw: text };
-  }
+  } catch (error) {
+  throw error;
+}
 }
 
 async function generateFlashcards(subject: string, topic: string, additionalInstructions: string, apiKey: string) {
