@@ -180,8 +180,24 @@ Rules:
 
   try {
     const parsed = JSON.parse(text);
-    const questions = Array.isArray(parsed) ? parsed : (parsed.questions || parsed.quiz || []);
-    return { questions };
+   let parsed;
+
+try {
+  parsed = JSON.parse(text);
+} catch (error) {
+  throw new Error(`Invalid JSON returned by OpenAI:\n${text}`);
+}
+
+const questions =
+  parsed.questions ??
+  parsed.quiz ??
+  (Array.isArray(parsed) ? parsed : []);
+
+if (!Array.isArray(questions) || questions.length === 0) {
+  throw new Error("OpenAI returned no quiz questions.");
+}
+
+return { questions };
   } catch {
     return { questions: [], raw: text };
   }
