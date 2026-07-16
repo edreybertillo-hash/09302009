@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Brain, Loader2, Mail, Lock, User } from 'lucide-react';
+import { Loader2, Mail, Lock, User } from 'lucide-react';
+import Image from 'next/image';
 import { toast } from 'sonner';
 
 export default function SignupPage() {
@@ -30,7 +31,7 @@ export default function SignupPage() {
       toast.error(error.message);
       setLoading(false);
     } else {
-      toast.success('Account created! Welcome to ReviewAI.');
+      toast.success('Account created! Welcome to Thinky.');
       router.push('/dashboard');
     }
   };
@@ -47,10 +48,14 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg">
-              <Brain className="h-5 w-5" />
-            </div>
-            <span className="text-2xl font-bold">ReviewAI</span>
+            <Image
+              src="/ChatGPT_Image_Jul_16,_2026,_02_08_11_PM.png"
+              alt="Thinky"
+              width={40}
+              height={40}
+              className="rounded-lg"
+            />
+            <span className="text-2xl font-bold">Thinky</span>
           </Link>
         </div>
 

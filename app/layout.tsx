@@ -8,10 +8,10 @@ import { Toaster } from '@/components/ui/sonner';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'ReviewAI — Study Smarter with AI',
+  title: 'Thinky — Study Smarter with AI',
   description: 'Personalized AI-powered learning platform. Get AI tutoring, generate quizzes, create flashcards, and track your progress.',
   openGraph: {
-    title: 'ReviewAI — Study Smarter with AI',
+    title: 'Thinky — Study Smarter with AI',
     description: 'Personalized AI-powered learning platform with AI tutoring, quiz generation, and smart analytics.',
     type: 'website',
   },

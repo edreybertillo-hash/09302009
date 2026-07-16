@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Brain, Twitter, Github, Linkedin } from 'lucide-react';
+import { Twitter, Github, Linkedin } from 'lucide-react';
+import Image from 'next/image';
 
 export function Footer() {
   const sections = [
@@ -40,10 +41,14 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
-                <Brain className="h-5 w-5" />
-              </div>
-              <span className="text-xl font-bold">ReviewAI</span>
+              <Image
+                src="/ChatGPT_Image_Jul_16,_2026,_02_08_11_PM.png"
+                alt="Thinky"
+                width={36}
+                height={36}
+                className="rounded-lg"
+              />
+              <span className="text-xl font-bold">Thinky</span>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground">
               Study smarter with AI-powered personalized learning.
@@ -82,7 +87,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/40 pt-8 sm:flex-row">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} ReviewAI. All rights reserved.
+            &copy; {new Date().getFullYear()} Thinky. All rights reserved.
           </p>
           <div className="flex gap-6">
             <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">

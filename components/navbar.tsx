@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/providers/auth-provider';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Brain, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -23,9 +24,15 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/20">
-            <Brain className="h-5 w-5" />
-          </div>
+          <Image
+            src="/ChatGPT_Image_Jul_16,_2026,_02_08_11_PM.png"
+            alt="Thinky"
+            width={36}
+            height={36}
+            className="rounded-lg"
+            priority
+          />
+          <span className="text-xl font-bold tracking-tight">Thinky</span>
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">

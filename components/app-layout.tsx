@@ -7,9 +7,10 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
-  Brain, LayoutDashboard, BookOpen, Bot, FileText, Layers,
+  LayoutDashboard, BookOpen, Bot, FileText, Layers,
   BarChart3, StickyNote, LogOut, Menu, X, Flame, Zap, Shield,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -62,9 +63,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 flex-col border-r border-border/40 bg-card/50 backdrop-blur-xl lg:flex">
         <div className="flex h-16 items-center gap-2 border-b border-border/40 px-6">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
-              <Brain className="h-4 w-4" />
-            </div>
+            <Image
+              src="/ChatGPT_Image_Jul_16,_2026,_02_08_11_PM.png"
+              alt="Thinky"
+              width={32}
+              height={32}
+              className="rounded-lg"
+            />
+            <span className="text-lg font-bold">Thinky</span>
           </Link>
         </div>
 
@@ -134,9 +140,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile header */}
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border/40 bg-background/80 px-4 backdrop-blur-xl lg:hidden">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
-            <Brain className="h-4 w-4" />
-          </div>
+          <Image
+            src="/ChatGPT_Image_Jul_16,_2026,_02_08_11_PM.png"
+            alt="Thinky"
+            width={32}
+            height={32}
+            className="rounded-lg"
+          />
+          <span className="text-lg font-bold">Thinky</span>
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -166,9 +177,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             >
               <div className="flex h-16 items-center justify-between border-b border-border/40 px-6">
                 <Link href="/" className="flex items-center gap-2" onClick={() => setSidebarOpen(false)}>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
-                    <Brain className="h-4 w-4" />
-                  </div>
+                  <Image
+                    src="/ChatGPT_Image_Jul_16,_2026,_02_08_11_PM.png"
+                    alt="Thinky"
+                    width={32}
+                    height={32}
+                    className="rounded-lg"
+                  />
+                  <span className="text-lg font-bold">Thinky</span>
                 </Link>
                 <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
                   <X className="h-5 w-5" />

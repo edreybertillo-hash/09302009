@@ -25,14 +25,14 @@ const features = [
 ];
 
 const testimonials = [
-  { name: 'Sarah Chen', role: 'High School Student', content: 'ReviewAI completely changed how I study. The AI tutor explains things my textbook cant, and the flashcards save me hours of prep time.', rating: 5 },
+  { name: 'Sarah Chen', role: 'High School Student', content: 'Thinky completely changed how I study. The AI tutor explains things my textbook cant, and the flashcards save me hours of prep time.', rating: 5 },
   { name: 'Marcus Johnson', role: 'College Freshman', content: 'I uploaded my bio notes and got a 20-question quiz in seconds. The explanations for wrong answers are incredibly helpful.', rating: 5 },
   { name: 'Priya Patel', role: 'Graduate Student', content: 'The analytics dashboard helps me see exactly which subjects I need to focus on. My study streak is at 47 days now!', rating: 5 },
-  { name: 'David Kim', role: 'Teacher', content: 'I use ReviewAI to create practice exams for my students. The question variety and quality are outstanding.', rating: 5 },
+  { name: 'David Kim', role: 'Teacher', content: 'I use Thinky to create practice exams for my students. The question variety and quality are outstanding.', rating: 5 },
 ];
 
 const faqs = [
-  { q: 'What is ReviewAI?', a: 'ReviewAI is an AI-powered educational platform that provides personalized tutoring, quiz generation, flashcards, and learning analytics to help you study more effectively.' },
+  { q: 'What is Thinky?', a: 'Thinky is an AI-powered educational platform that provides personalized tutoring, quiz generation, flashcards, and learning analytics to help you study more effectively.' },
   { q: 'How does the AI Tutor work?', a: 'The AI tutor uses advanced language models to understand your questions and provide step-by-step explanations tailored to your grade level. It supports markdown, code formatting, and math equations.' },
   { q: 'Can I upload my own notes?', a: 'Yes! You can upload PDFs, DOCX, PPT, and image files, or paste your notes directly. AI will generate quizzes, flashcards, and study materials from your content.' },
   { q: 'Is there a free plan?', a: 'Yes, the Free plan includes limited AI chats, limited quiz generation, and basic analytics. Upgrade to Premium for unlimited access and advanced features.' },
@@ -233,7 +233,7 @@ export default function Home() {
               Loved by students worldwide
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              See what our community has to say about ReviewAI.
+              See what our community has to say about Thinky.
             </p>
           </motion.div>
 

@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-const SYSTEM_PROMPT = `You are ReviewAI, a helpful and knowledgeable AI tutor. Your job is to help students learn by:
+const SYSTEM_PROMPT = `You are Thinky, a helpful and knowledgeable AI tutor. Your job is to help students learn by:
 - Explaining concepts clearly and step-by-step
 - Adapting your explanation to the student's level
 - Using markdown formatting for readability
