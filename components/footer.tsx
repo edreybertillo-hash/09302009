@@ -42,11 +42,11 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2">
               <Image
-                src="/ChatGPT_Image_Jul_16,_2026,_02_08_11_PM.png"
+                src="/ChatGPT_Image_Jul_16,_2026,_02_18_07_PM.png"
                 alt="Thinky"
-                width={36}
-                height={36}
-                className="rounded-lg"
+                width={44}
+                height={44}
+                className="rounded-lg ring-2 ring-border/50 shadow-md"
               />
               <span className="text-xl font-bold">Thinky</span>
             </Link>

@@ -25,11 +25,11 @@ export function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/ChatGPT_Image_Jul_16,_2026,_02_08_11_PM.png"
+            src="/ChatGPT_Image_Jul_16,_2026,_02_18_07_PM.png"
             alt="Thinky"
-            width={36}
-            height={36}
-            className="rounded-lg"
+            width={44}
+            height={44}
+            className="rounded-lg ring-2 ring-border/50 shadow-md"
             priority
           />
           <span className="text-xl font-bold tracking-tight">Thinky</span>

@@ -49,11 +49,11 @@ export default function SignupPage() {
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
             <Image
-              src="/ChatGPT_Image_Jul_16,_2026,_02_08_11_PM.png"
+              src="/ChatGPT_Image_Jul_16,_2026,_02_18_07_PM.png"
               alt="Thinky"
-              width={40}
-              height={40}
-              className="rounded-lg"
+              width={48}
+              height={48}
+              className="rounded-lg ring-2 ring-border/50 shadow-md"
             />
             <span className="text-2xl font-bold">Thinky</span>
           </Link>
