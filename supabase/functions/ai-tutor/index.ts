@@ -116,21 +116,44 @@ async function streamChat(messages: any[], apiKey: string) {
 }
 
 async function generateQuiz(subject: string, topic: string, difficulty: string, numQuestions: number, questionTypes: string[], additionalInstructions: string, apiKey: string) {
-  const prompt = `Generate a quiz about "${topic}" under the subject "${subject}" with ${numQuestions} questions.
+ const prompt = `Generate a quiz about "${topic}" under the subject "${subject}" with ${numQuestions} questions.
+
 Difficulty: ${difficulty}
-Question types to include: ${questionTypes.join(", ")}
-${additionalInstructions ? `\nAdditional instructions from the user:\n${additionalInstructions}\n` : ""}
-Return ONLY a JSON array of question objects. Each object must have:
-- "question_type": one of "multiple_choice", "true_false", "identification", "fill_blank", "essay"
-- "question_text": the question
-- "options": array of strings (for multiple_choice only, 4 options)
-- "correct_answer": the correct answer
-- "explanation": a brief explanation of why the answer is correct
 
-For true_false, options should be ["True", "False"] and correct_answer is "True" or "False".
-For identification, fill_blank, and essay, options should be an empty array.
+Question types:
+${questionTypes.join(", ")}
 
-Return ONLY valid JSON, no markdown formatting.`;
+${additionalInstructions ? `Additional instructions:\n${additionalInstructions}\n` : ""}
+
+Return ONLY a valid JSON object using this exact format:
+
+{
+  "questions": [
+    {
+      "question_type": "multiple_choice",
+      "question_text": "Question here",
+      "options": [
+        "Option A",
+        "Option B",
+        "Option C",
+        "Option D"
+      ],
+      "correct_answer": "Option A",
+      "explanation": "Explanation here"
+    }
+  ]
+}
+
+Rules:
+- No markdown.
+- No code fences.
+- No extra text.
+- Return ONLY the JSON object.
+- For true_false use:
+  "options": ["True","False"]
+- For identification, fill_blank and essay:
+  "options": []
+`;
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
