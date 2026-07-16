@@ -7,10 +7,11 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
-  LayoutDashboard, BookOpen, Bot, FileText, Layers,
+  LayoutDashboard, BookOpen, FileText, Layers,
   BarChart3, StickyNote, LogOut, Menu, X, Flame, Zap, Shield,
 } from 'lucide-react';
 import Image from 'next/image';
+import { ThinkyChatbot } from '@/components/thinky-chatbot';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,7 +19,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/subjects', label: 'Subjects', icon: BookOpen },
-  { href: '/ai-tutor', label: 'AI Tutor', icon: Bot },
   { href: '/quiz-generator', label: 'Quiz Generator', icon: FileText },
   { href: '/flashcards', label: 'Flashcards', icon: Layers },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
@@ -243,6 +243,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+
+      <ThinkyChatbot />
     </div>
   );
 }
