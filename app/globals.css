@@ -87,6 +87,13 @@
   .scrollbar-thin {
     scrollbar-width: thin;
   }
+  .animate-pulse-slow {
+    animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes pulse-slow {
+    0%, 100% { box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3), 0 0 0 0 rgba(124, 58, 237, 0.4); }
+    50% { box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3), 0 0 0 12px rgba(124, 58, 237, 0); }
+  }
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
   }

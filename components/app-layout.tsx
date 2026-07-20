@@ -11,7 +11,7 @@ import {
   BarChart3, StickyNote, LogOut, Menu, X, Flame, Zap, Shield,
 } from 'lucide-react';
 import Image from 'next/image';
-import { ThinkyChatbot } from '@/components/thinky-chatbot';
+import { EduTutorChatbot } from '@/components/edututor-chatbot';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -244,7 +244,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      <ThinkyChatbot />
+      <EduTutorChatbot />
     </div>
   );
 }
