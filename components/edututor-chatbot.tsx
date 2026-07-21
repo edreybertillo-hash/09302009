@@ -73,7 +73,8 @@ export function EduTutorChatbot() {
             messages: allMessages.map((m) => ({ role: m.role, content: m.content })),
           }),
         });
-
+console.log("Response Status:", response.status);
+console.log("Response OK:", response.ok);
         if (!response.ok) {
           const err = await response.json().catch(() => ({ error: 'Request failed' }));
           throw new Error(err.error || `HTTP ${response.status}`);
