@@ -110,16 +110,18 @@ export function EduTutorChatbot() {
             }
           }
         }
-      } catch {
-        setMessages((prev) => [
-          ...prev.filter((m) => m.content !== ''),
-          {
-            role: 'assistant',
-            content: "I'm sorry, I had trouble responding just now. Could you try asking again?",
-            ts: Date.now(),
-          },
-        ]);
-      } finally {
+     } catch (error: any) {
+  console.error("AI Chat Error:", error);
+
+  setMessages((prev) => [
+    ...prev.filter((m) => m.content !== ''),
+    {
+      role: 'assistant',
+      content: `Error: ${error?.message || "Unknown error"}`,
+      ts: Date.now(),
+    },
+  ]);
+} finally {
         setStreaming(false);
       }
     },
