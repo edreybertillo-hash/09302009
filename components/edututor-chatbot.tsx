@@ -61,6 +61,9 @@ export function EduTutorChatbot() {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const session = (await supabase.auth.getSession()).data.session;
+        console.log("Supabase URL:", supabaseUrl);
+console.log("Session:", session);
+console.log("API Key Exists:", !!apiKey);
         const response = await fetch(`${supabaseUrl}/functions/v1/ai-tutor`, {
           method: 'POST',
           headers: {
