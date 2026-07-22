@@ -1,5 +1,4 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,28 +6,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-const SYSTEM_PROMPT = `You are EduTutor AI, a patient, friendly, and encouraging AI tutor for students from elementary through high school. Your goal is to help students truly understand concepts, not just hand them answers.
-
-Behavior:
-- Explain concepts step-by-step using simple, age-appropriate language.
-- Ask guiding questions before revealing answers.
-- Provide hints before giving full solutions.
-- Adapt explanations to the student's demonstrated knowledge level.
-- Generate quizzes and practice problems when helpful.
-- When the student makes a mistake, explain clearly and kindly why it's wrong and how to fix it.
-- Encourage curiosity and critical thinking.
-- Maintain conversation context and lesson continuity.
-- Ask follow-up questions when necessary.
-- Suggest related learning topics and offer additional practice after explanations.
-- Offer short quizzes after explanations when appropriate.
-
-Subjects: Mathematics, Science, English, History, Computer Science, Economics, Geography, and General Knowledge.
-
-Formatting:
-- Use markdown for readability (headings, bullet lists, numbered steps, tables).
-- Use LaTeX math notation (inline with $...$ and display with $...$) for math.
-- Use fenced code blocks with language tags for code.
-- Be concise but thorough. If you don't know something, say so honestly.`;
+const SYSTEM_PROMPT = `You are Thinky, an AI study tutor. Your goal is to help students learn effectively.
+- Explain concepts step-by-step in a clear, encouraging way
+- Adapt your explanations to the student's level
+- Use examples and analogies when helpful
+- Support markdown formatting, math formulas, and code blocks
+- If a student asks something outside of education, gently redirect them to study topics
+- Keep responses concise but thorough`;
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -36,258 +20,130 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { messages, action, content, difficulty, numQuestions, questionTypes, subject, topic, additionalInstructions } = await req.json();
+    const { action, messages, subject, topic, numQuestions, questionTypes, additionalInstructions } = await req.json();
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
 
-    const openaiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!openaiKey) {
+    if (!apiKey) {
       return new Response(
         JSON.stringify({ error: "OpenAI API key not configured. Please add the OPENAI_API_KEY secret." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    let result: any;
-
     if (action === "chat") {
-      result = await streamChat(messages, openaiKey);
-      return new Response(result.body, {
-        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          stream: true,
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            ...messages,
+          ],
+        }),
       });
-    } else if (action === "generate_quiz") {
-      result = await generateQuiz(subject, topic, difficulty, numQuestions, questionTypes, additionalInstructions, openaiKey);
-    } else if (action === "generate_flashcards") {
-      result = await generateFlashcards(subject, topic, additionalInstructions, openaiKey);
-    } else if (action === "summarize") {
-      result = await summarizeText(content, openaiKey);
-    } else if (action === "simplify") {
-      result = await simplifyText(content, openaiKey);
-    } else if (action === "rewrite") {
-      result = await rewriteText(content, openaiKey);
-    } else if (action === "translate") {
-      result = await translateText(content, subject, openaiKey);
-    } else if (action === "study_plan") {
-      result = await generateStudyPlan(content, openaiKey);
-    } else {
-      return new Response(JSON.stringify({ error: "Invalid action" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+
+      if (!response.ok) {
+        const err = await response.text();
+        return new Response(JSON.stringify({ error: `OpenAI error: ${err}` }), {
+          status: response.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(response.body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+        },
       });
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-});
+    if (action === "generate_quiz") {
+      const typeDescriptions: Record<string, string> = {
+        multiple_choice: "multiple choice questions with 4 options and one correct answer",
+        true_false: "true/false questions",
+        identification: "identification questions where the student types a short answer",
+        essay: "essay questions that require a longer written response",
+      };
 
-async function streamChat(messages: any[], apiKey: string) {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
-      stream: true,
-      temperature: 0.7,
-      max_tokens: 2000,
-    }),
-  });
+      const requestedTypes = (questionTypes || ["multiple_choice"])
+        .map((t: string) => typeDescriptions[t] || t)
+        .join(", ");
 
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`OpenAI error: ${err}`);
-  }
+      const prompt = `Generate ${numQuestions || 5} quiz questions about "${topic}" in the subject of ${subject || "General"}.
+Question types: ${requestedTypes}.
+${additionalInstructions ? `Additional instructions: ${additionalInstructions}.` : ""}
 
-  const stream = new ReadableStream({
-    async start(controller) {
-      const reader = response.body!.getReader();
-      const decoder = new TextDecoder();
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value);
-          controller.enqueue(chunk);
-        }
-      } catch (e) {
-        controller.error(e);
-      }
-      controller.close();
-    },
-  });
-
-  return { body: stream };
-}
-
-async function generateQuiz(subject: string, topic: string, difficulty: string, numQuestions: number, questionTypes: string[], additionalInstructions: string, apiKey: string) {
-  const prompt = `Generate a quiz about "${topic}" under the subject "${subject}" with ${numQuestions} questions.
-Difficulty: ${difficulty}
-Question types to include: ${questionTypes.join(", ")}
-${additionalInstructions ? `\nAdditional instructions from the user:\n${additionalInstructions}\n` : ""}
-Return ONLY a JSON array of question objects. Each object must have:
-- "question_type": one of "multiple_choice", "true_false", "identification", "fill_blank", "essay"
+Return a JSON array of question objects. Each object must have:
+- "question_type": one of "multiple_choice", "true_false", "identification", "essay"
 - "question_text": the question
-- "options": array of strings (for multiple_choice only, 4 options)
+- "options": array of strings (for multiple_choice only, 4 options; empty array for other types)
 - "correct_answer": the correct answer
 - "explanation": a brief explanation of why the answer is correct
 
-For true_false, options should be ["True", "False"] and correct_answer is "True" or "False".
-For identification, fill_blank, and essay, options should be an empty array.
+Return ONLY valid JSON, no markdown wrapping.`;
 
-Return ONLY valid JSON, no markdown formatting.`;
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "You are a quiz generator. Return only valid JSON." },
+            { role: "user", content: prompt },
+          ],
+          response_format: { type: "json_object" },
+        }),
+      });
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-      max_tokens: 3000,
-      response_format: { type: "json_object" },
-    }),
-  });
+      if (!response.ok) {
+        const err = await response.text();
+        return new Response(JSON.stringify({ error: `OpenAI error: ${err}` }), {
+          status: response.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`OpenAI error: ${err}`);
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content || "{}";
+      let parsed;
+      try {
+        parsed = JSON.parse(content);
+      } catch {
+        parsed = { questions: [] };
+      }
+
+      const questions = parsed.questions || parsed.quiz || parsed;
+
+      return new Response(JSON.stringify({ questions }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "grade_quiz") {
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ error: "Unknown action" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ error: error.message || "Internal server error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
-
-  const data = await response.json();
-  const text = data.choices[0].message.content;
-
-  try {
-    const parsed = JSON.parse(text);
-    const questions = Array.isArray(parsed) ? parsed : (parsed.questions || parsed.quiz || []);
-    return { questions };
-  } catch {
-    return { questions: [], raw: text };
-  }
-}
-
-async function generateFlashcards(subject: string, topic: string, additionalInstructions: string, apiKey: string) {
-  const prompt = `Generate flashcards about "${topic}" under the subject "${subject}".
-Each flashcard should have a "front" (question or term) and "back" (answer or definition).
-Generate 10-20 flashcards covering the key concepts.
-${additionalInstructions ? `\nAdditional instructions from the user:\n${additionalInstructions}\n` : ""}
-Return ONLY a JSON object with a "flashcards" array containing objects with "front" and "back" fields. No markdown.`;
-
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-      max_tokens: 2000,
-      response_format: { type: "json_object" },
-    }),
-  });
-
-  if (!response.ok) throw new Error(`OpenAI error: ${await response.text()}`);
-  const data = await response.json();
-  const parsed = JSON.parse(data.choices[0].message.content);
-  return { flashcards: parsed.flashcards || [] };
-}
-
-async function summarizeText(content: string, apiKey: string) {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "Summarize the following text concisely while keeping key points. Use markdown." },
-        { role: "user", content },
-      ],
-      temperature: 0.5, max_tokens: 1000,
-    }),
-  });
-  if (!response.ok) throw new Error(`OpenAI error: ${await response.text()}`);
-  const data = await response.json();
-  return { result: data.choices[0].message.content };
-}
-
-async function simplifyText(content: string, apiKey: string) {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "Simplify the following text so a middle school student can understand it. Use markdown." },
-        { role: "user", content },
-      ],
-      temperature: 0.5, max_tokens: 1000,
-    }),
-  });
-  if (!response.ok) throw new Error(`OpenAI error: ${await response.text()}`);
-  const data = await response.json();
-  return { result: data.choices[0].message.content };
-}
-
-async function rewriteText(content: string, apiKey: string) {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "Rewrite the following text to improve clarity, flow, and readability. Keep the same meaning. Use markdown." },
-        { role: "user", content },
-      ],
-      temperature: 0.7, max_tokens: 1000,
-    }),
-  });
-  if (!response.ok) throw new Error(`OpenAI error: ${await response.text()}`);
-  const data = await response.json();
-  return { result: data.choices[0].message.content };
-}
-
-async function translateText(content: string, targetLang: string, apiKey: string) {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: `Translate the following text to ${targetLang}. Keep markdown formatting.` },
-        { role: "user", content },
-      ],
-      temperature: 0.3, max_tokens: 1000,
-    }),
-  });
-  if (!response.ok) throw new Error(`OpenAI error: ${await response.text()}`);
-  const data = await response.json();
-  return { result: data.choices[0].message.content };
-}
-
-async function generateStudyPlan(content: string, apiKey: string) {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "Create a structured study plan based on the student's request. Use markdown with clear sections, daily goals, and recommended resources. Be practical and motivating." },
-        { role: "user", content },
-      ],
-      temperature: 0.7, max_tokens: 1500,
-    }),
-  });
-  if (!response.ok) throw new Error(`OpenAI error: ${await response.text()}`);
-  const data = await response.json();
-  return { result: data.choices[0].message.content };
-}
+});
